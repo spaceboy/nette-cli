@@ -4,30 +4,30 @@ namespace Spaceboy\NetteCli;
 use Nette\Utils\AssertionException;
 use Nette\Utils\Validators;
 
-class Parameter
+class Argument
 {
-    /** @var string parameter full name (used as --parameter) */
+    /** @var string argument full name (used as --argument) */
     private string $name;
     
-    /** @var string parameter shortcut (used as -p) */
+    /** @var string argument shortcut (used as -s) */
     private ?string $shortcut = null;
     
-    /** @var string parameter validation format in Nette\Util\Validators format */
+    /** @var string argument validation format in Nette\Util\Validators format */
     private ?string $format = null;
     
-    /** @var mixed parameter value */
+    /** @var mixed argument value */
     private $value = null;
 
     /** @var bool unset */
     private bool $unset = true;
     
-    /** @var string parameter description */
+    /** @var string argument description */
     private ?string $description = null;
 
     /**
-     * Parameter creator function.
+     * Argument creator function.
      * @param string $name
-     * @return Parameter
+     * @return Argument
      */
     public static function create(string $name): self
     {

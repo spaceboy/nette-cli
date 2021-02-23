@@ -7,9 +7,9 @@ class Command
 {
     private string $name;
     
-    private array $paramsRequired = [];
+    private array $argumentsRequired = [];
     
-    private array $paramsOptional = [];
+    private array $argumentsOptional = [];
     
     private array $switches = [];
     
@@ -66,50 +66,50 @@ class Command
     }
 
     /**
-     * Add required command parameter name.
-     * @param string $parameterName
+     * Add required command argument name.
+     * @param string $argumentName
      * @return Command
      */
-    public function withParameterRequired(string $parameterName): self
+    public function withArgumentRequired(string $argumentName): self
     {
-        $this->paramCheck($parameterName);
-        $this->paramsRequired[] = $parameterName;
+        $this->argumentCheck($argumentName);
+        $this->argumentsRequired[] = $argumentName;
         return $this;
     }
     
     /**
-     * Add optional command parameter name.
-     * @param string $parameterName
+     * Add optional command argument name.
+     * @param string $paramName
      * @return Command
      */
-    public function withParameterOptional(string $parameterName): self
+    public function withArgumentOptional(string $argumentName): self
     {
-        $this->paramCheck($parameterName);
-        $this->paramsOptional[] = $parameterName;
+        $this->argumentCheck($argumentName);
+        $this->argumentsOptional[] = $argumentName;
         return $this;
     }
     
     /**
      * Add command switch name.
-     * @param string $paramName
+     * @param string $switchName
      * @return Command
      */
     public function withSwitch(string $switchName): self
     {
-        $this->paramCheck($switchName);
+        $this->argumentCheck($switchName);
         $this->switches[] = $switchName;
         return $this;
     }
     
     /**
-     * Command parameters getter.
+     * Command arguments getter.
      * @return array
      */
-    public function getParameters(): array
+    public function getArguments(): array
     {
         return [
-            'required' => $this->paramsRequired,
-            'optional' => $this->paramsOptional,
+            'required' => $this->argumentsRequired,
+            'optional' => $this->argumentsOptional,
             'switches' => $this->switches,
         ];
     }
@@ -128,28 +128,28 @@ class Command
     /**
      * Execute command worker function.
      * @param $container
-     * @param array $parameters defined for CLI app
+     * @param array $arguments defined for CLI app
      * @param array $switches defined for CLI app
      * @return void
      */
-    public function execute($container, array $parameters, array $switches): void
+    public function execute($container, array $arguments, array $switches): void
     {
         $function = new \ReflectionFunction($this->worker);
-        $functionParams = $function->getParameters();
-        $commandParams = array_merge($this->paramsRequired, $this->paramsOptional, $this->switches);
+        $functionArguments = $function->getArguments();
+        $commandArguments = array_merge($this->argumentsRequired, $this->argumentsOptional, $this->switches);
         $params = [];
         
         // Check parameters:
         try {
-            foreach ($functionParams as $parameter) {
-                $name = $parameter->getName();
-                $knownParameter = in_array($name, $commandParams);
-                if ($knownParameter && array_key_exists($name, $parameters)) {
-                    $parameters[$name]->validate(in_array($name, $this->paramsRequired));
-                    $params[$name] = $parameters[$name]->getValue();
-                } elseif ($knownParameter && array_key_exists($name, $switches)) {
+            foreach ($functionArguments as $argument) {
+                $name = $argument->getName();
+                $knownArgument = in_array($name, $commandArguments);
+                if ($knownArgument && array_key_exists($name, $arguments)) {
+                    $arguments[$name]->validate(in_array($name, $this->argumentsRequired));
+                    $params[$name] = $arguments[$name]->getValue();
+                } elseif ($knownArgument && array_key_exists($name, $switches)) {
                     $params[$name] = $switches[$name]->getValue();
-                } elseif ($class = $parameter->getClass()) {
+                } elseif ($class = $argument->getClass()) {
                     $params[$name] = $container->getByType($class->getName());
                 } else {
                     // Something went wrong:
@@ -158,7 +158,7 @@ class Command
                 }
             }
         } catch (AssertionException $ex) {
-            echo 'Invalid parameter: ' . $ex->getMessage() . PHP_EOL;
+            echo 'Invalid argument: ' . $ex->getMessage() . PHP_EOL;
             exit;
         }
         
@@ -171,10 +171,10 @@ class Command
         }
     }
 
-    private function paramCheck(string $paramName)
+    private function argumentCheck(string $argumentName)
     {
-        if (in_array($paramName, array_merge($this->paramsRequired, $this->paramsOptional, $this->switches))) {
-            echo "Duplicate parameter/switch name ({$paramName}) in command {$this->name}." . PHP_EOL;
+        if (in_array($argumentName, array_merge($this->argumentsRequired, $this->argumentsOptional, $this->switches))) {
+            echo "Duplicate argument/switch name ({$argumentName}) in command {$this->name}." . PHP_EOL;
             exit;
         }
     }
