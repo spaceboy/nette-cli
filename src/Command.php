@@ -135,21 +135,21 @@ class Command
     public function execute($container, array $arguments, array $switches): void
     {
         $function = new \ReflectionFunction($this->worker);
-        $functionArguments = $function->getArguments();
+        $functionParameters = $function->getParameters();
         $commandArguments = array_merge($this->argumentsRequired, $this->argumentsOptional, $this->switches);
         $params = [];
         
         // Check parameters:
         try {
-            foreach ($functionArguments as $argument) {
-                $name = $argument->getName();
+            foreach ($functionParameters as $parameter) {
+                $name = $parameter->getName();
                 $knownArgument = in_array($name, $commandArguments);
                 if ($knownArgument && array_key_exists($name, $arguments)) {
                     $arguments[$name]->validate(in_array($name, $this->argumentsRequired));
                     $params[$name] = $arguments[$name]->getValue();
                 } elseif ($knownArgument && array_key_exists($name, $switches)) {
                     $params[$name] = $switches[$name]->getValue();
-                } elseif ($class = $argument->getClass()) {
+                } elseif ($class = $parameter->getClass()) {
                     $params[$name] = $container->getByType($class->getName());
                 } else {
                     // Something went wrong:
