@@ -14,6 +14,8 @@ class Command
     private array $switches = [];
     
     private $worker;
+
+    private ?string $description = null;
     
     /**
      * Create class instance.
@@ -44,26 +46,46 @@ class Command
     }
 
     /**
-     * Add required command parameter name.
-     * @param string $paramName
+     * Description setter.
+     * @param string $description
      * @return Command
      */
-    public function withParameterRequired(string $paramName): self
+    public function setDescription(string $description): self
     {
-        $this->paramCheck($paramName);
-        $this->paramsRequired[] = $paramName;
+        $this->description = $description;
+        return $this;
+    }
+
+    /**
+     * Description getter.
+     * @return string|null
+     */
+    public function getDescription()
+    {
+        return $this->description;
+    }
+
+    /**
+     * Add required command parameter name.
+     * @param string $parameterName
+     * @return Command
+     */
+    public function withParameterRequired(string $parameterName): self
+    {
+        $this->paramCheck($parameterName);
+        $this->paramsRequired[] = $parameterName;
         return $this;
     }
     
     /**
      * Add optional command parameter name.
-     * @param string $paramName
+     * @param string $parameterName
      * @return Command
      */
-    public function withParameterOptional(string $paramName): self
+    public function withParameterOptional(string $parameterName): self
     {
-        $this->paramCheck($paramName);
-        $this->paramsOptional[] = $paramName;
+        $this->paramCheck($parameterName);
+        $this->paramsOptional[] = $parameterName;
         return $this;
     }
     
