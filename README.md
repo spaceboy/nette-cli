@@ -10,7 +10,7 @@ composer install spaceboy/nette-cli
 
 ## My first CLI application
 
-I strongly recommend you to create a dedicated space for CLI applications in app root directory. For example `bin` for apps operated from command line and `cron` for that operated from cron.
+I strongly recommend you to create a dedicated space for CLI applications in app root directory. For example `bin` for apps operated from command line and `cron` for apps runned from cron.
 
 Create a `PHP` file, f.e. `command.php` in `bin` directory:
 ```
@@ -84,9 +84,13 @@ As we've registered also `switch` named "strong" in application (`Cli->registerS
 php command.php hello --name World --strong
 ```
 
-## Cli methods
+## `Cli` public methods:
+
 * ### `setName(string $name)`
-  Sets application name displayed during execution.
+  Sets application name displayed during each command execution.
+
+* ### `setDescription(string $description)`
+  Sets application description displayed when application is run without any command/argument (help), lists of commands, arguments and switches follow.
 
 * ### `registerArgument(Argument $argument)`
   Registers argument (see Argument). Only registered arguments can be referrenced by commands.
@@ -106,7 +110,8 @@ php command.php hello --name World --strong
     ->run('--arg1 "Argument one" --arg2 Argument2 --switch')
   ```
 
-## Argument
+## `Argument` public methods:
+
 * ### `create(string $name)`
   Creates Argument, returns Argument.  
   All other methods can be chained.
@@ -123,7 +128,8 @@ php command.php hello --name World --strong
 * ### `setFormat(string $format)`
   Sets required [Nette validation type](https://doc.nette.org/en/3.1/validators#toc-expected-types) for argument. Can save you lot of validations in the command worker function body.
 
-## Command
+## `Command` public methods:
+
 * ### `create(string $name)`
   Creates Command, returns Command.  
   All other methods can be chained.
@@ -182,21 +188,25 @@ php command.php hello --name World --strong
 ```
 
 ## Using helpers
-When things gonna be way much complicated or you need to share some argument or worker functions between two or more scripts (eg. between `CLI` script and `cron` script), feel free to use helpers.  
-There's no reason why constructions like the one bellow shouldn't work:
+
+When things gonna be complicated, you should need to share some argument(s) or worker functions(s) between two or more scripts (eg. between `cli` script and `cron` script).  
+Feel free to use helpers. You can set both static and dynamic methods as command worker function as well as closure. Just don't forget that those methods must be public.
 
 ```
-    ...
-    ->registerArgument(ArgumentsClass::argName())
-    ...
-    ->registerCommand($commandClass->getCommand('commandOne'))
-    ->registerCommand(
-      Command::create('use-database')
-        ->withArgumentRequired('name')
-        ->setWorker('WorkersClass::useDatabase')
-    )
-    ...
-    ->run();
+  ...
+  ->registerArgument(ArgumentsClass::argName());
+  ...
+  ->registerCommand($commandClass->getCommand('commandOne'));
+  ->registerCommand(
+    Command::create('command')
+      ->withArgumentRequired('name')
+      // Use static method:
+      ->setWorker([WorkersClass::class, 'staticMethod'])
+      // Or use dynamic method:
+      ->setWorker([new WorkersClass(), 'dynamicMethod'])
+  );
+  ...
+  ->run();
 ```
 
 Be well, Earthers!
