@@ -5,7 +5,7 @@ Simple tool for easy CLI apps creation in Nette framework
 The best way to install into web application is the easiest one.  
 Open console, go to your app directory and type:
 ```
-composer install spaceboy/nette-cli
+composer require spaceboy/nette-cli [dev-master]
 ```
 
 ## My first CLI application
