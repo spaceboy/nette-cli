@@ -1,8 +1,10 @@
 <?php
 namespace Spaceboy\NetteCli;
 
+
 use Nette\Utils\AssertionException;
 use Nette\Utils\Validators;
+
 
 class Argument
 {
@@ -140,14 +142,4 @@ class Argument
         return $this->value;
     }
 
-    /**
-     * Unset getter.
-     * @return bool
-     */
-    /*
-    public function isUnset(): bool
-    {
-        return $this->unset;
-    }
-    */
 }

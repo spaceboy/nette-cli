@@ -1,15 +1,11 @@
 <?php
 namespace Spaceboy\NetteCli;
 
-require_once __DIR__ . '/Argument.php';
-require_once __DIR__ . '/Command.php';
-
-require_once __DIR__ . '/../../../vendor/autoload.php';
-require_once __DIR__ . '/../../Bootstrap.php';
 
 use App\Bootstrap;
 use Spaceboy\NetteCli\Argument;
 use Spaceboy\NetteCli\Command;
+
 
 class Cli extends Bootstrap
 {
@@ -163,7 +159,7 @@ class Cli extends Bootstrap
     /**
      * Parse and validate comand line parameters
      * @param array $arguments
-    */
+     */
     private function parseArguments(array $arguments): void
     {
         $command = null;
