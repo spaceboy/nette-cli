@@ -2,6 +2,7 @@
 namespace Spaceboy\NetteCli;
 
 use Nette\Utils\AssertionException;
+use Nette\DI\Container;
 
 class Command
 {
@@ -132,14 +133,47 @@ class Command
      * @param array $switches defined for CLI app
      * @return void
      */
-    public function execute($container, array $arguments, array $switches): void
+    public function execute(Container $container, array $arguments, array $switches): void
     {
-        $function = new \ReflectionFunction($this->worker);
-        $functionParameters = $function->getParameters();
-        $commandArguments = array_merge($this->argumentsRequired, $this->argumentsOptional, $this->switches);
-        $params = [];
+        $function = (
+            is_array($this->worker)
+            ? new \ReflectionMethod($this->worker[0], $this->worker[1])
+            : new \ReflectionFunction($this->worker)
+        );
+
+        $params = $this->getFunctionParameters(
+            $container,
+            $function->getParameters(),
+            array_merge($this->argumentsRequired, $this->argumentsOptional, $this->switches),
+            $arguments
+        );
         
-        // Check parameters:
+        // Execute worker:
+        try {
+            if (is_array($this->worker)) {
+                // Worker is method:
+                $function->invokeArgs(($function->isStatic() ? null : $this->worker[0]), $params);
+            } else {
+                // Worker is closure:
+                $function->invokeArgs($params);
+            }
+        } catch (\Exception $ex) {
+            echo "Error: {$ex->getMessage()}" . PHP_EOL;
+            exit;
+        }
+    }
+
+    private function argumentCheck(string $argumentName)
+    {
+        if (in_array($argumentName, array_merge($this->argumentsRequired, $this->argumentsOptional, $this->switches))) {
+            echo "Duplicate argument/switch name ({$argumentName}) in command {$this->name}." . PHP_EOL;
+            exit;
+        }
+    }
+
+    private function getFunctionParameters(Container $container, array $functionParameters, array $commandArguments, array $arguments): array
+    {
+        $params = [];
         try {
             foreach ($functionParameters as $parameter) {
                 $name = $parameter->getName();
@@ -161,21 +195,6 @@ class Command
             echo 'Invalid argument: ' . $ex->getMessage() . PHP_EOL;
             exit;
         }
-        
-        // Execute worker:
-        try {
-            $function->invokeArgs($params);
-        } catch (\Exception $ex) {
-            echo "Error: {$ex->getMessage()}" . PHP_EOL;
-            exit;
-        }
-    }
-
-    private function argumentCheck(string $argumentName)
-    {
-        if (in_array($argumentName, array_merge($this->argumentsRequired, $this->argumentsOptional, $this->switches))) {
-            echo "Duplicate argument/switch name ({$argumentName}) in command {$this->name}." . PHP_EOL;
-            exit;
-        }
+        return $params;
     }
 }

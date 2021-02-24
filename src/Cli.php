@@ -13,13 +13,13 @@ use Spaceboy\NetteCli\Command;
 
 class Cli extends Bootstrap
 {
-    /** @var Nette container */
-    //private $container;
-    
     /** @var string command */
     private ?string $command = null;
+
+    /** @var string description */
+    private ?string $description;
     
-    /** @var string program name */
+    /** @var string application name */
     private string $name = 'NetteCli application 0.01';
     
     /** @var Argument[] list of arguments */
@@ -44,12 +44,24 @@ class Cli extends Bootstrap
     }
     
     /**
+     * Name setter.
      * @param string $name CLI app name
      * @return Cli
      */
     public function setName(string $name): self
     {
         $this->name = $name;
+        return $this;
+    }
+
+    /**
+     * Description setter.
+     * @param string $description
+     * @return Cli
+     */
+    public function setDescription(string $description): self
+    {
+        $this->description = $description;
         return $this;
     }
     
@@ -135,6 +147,8 @@ class Cli extends Bootstrap
             $this->showHelp();
             exit;
         }
+        
+        echo $this->name . PHP_EOL;
         if (!array_key_exists($this->command, $this->commands)) {
             echo "Unknown command ({$this->command})." . PHP_EOL;
             exit;
@@ -161,7 +175,7 @@ class Cli extends Bootstrap
                     '/^\-\-(.*)$/',
                     function ($match) use (&$this_, &$arguments) {
                         if (array_key_exists($match[1], $this_->arguments)) {
-                            $this_->parameters[$match[1]]->setValue(array_shift($arguments));
+                            $this_->arguments[$match[1]]->setValue(array_shift($arguments));
                             return;
                         }
                         if (array_key_exists($match[1], $this_->switches)) {
@@ -182,7 +196,7 @@ class Cli extends Bootstrap
                             echo "Unknown argument shortcut ({$match[1]})." . PHP_EOL;
                             exit;
                         }
-                        $this_->parameters[$this->shortcuts[$match[1]]]->setValue($match[2]);
+                        $this_->arguments[$this->shortcuts[$match[1]]]->setValue($match[2]);
                     },
                     $argument
                 );
@@ -206,36 +220,83 @@ class Cli extends Bootstrap
         }
     }
 
-    private function showHelp()
+    /**
+     * Show app description and list of all registered commands, arguments and options.
+     * @return void
+     */
+    private function showHelp(): void
     {
-        echo $this->name . PHP_EOL;
+        echo ($this->description ?? $this->name) . PHP_EOL;
         echo 'Usage:' . PHP_EOL;
-        echo '    php ' . $_SERVER['SCRIPT_NAME'] . ' command [options] [arguments] [switches]' . PHP_EOL . PHP_EOL;
+        echo '    php ' . $_SERVER['SCRIPT_NAME'] . ' command [arguments] [options]' . PHP_EOL . PHP_EOL;
 
-        echo 'Commands:' . PHP_EOL;
-        foreach ($this->commands as $name => $command) {
-            echo "{$name}: " . PHP_EOL
-                . '    ' . ($command->getDescription() ?? 'undescribed') . PHP_EOL;
+        if (count($this->commands) > 0) {
+            echo 'Commands:' . PHP_EOL;
+            foreach ($this->commands as $name => $command) {
+                echo "{$name}: " . PHP_EOL
+                    . '    ' . ($command->getDescription() ?? 'undescribed') . PHP_EOL;
+                $arguments = $command->getArguments();
+                $out = [];
+                if (count($arguments['required'])) {
+                    $out = array_map(
+                        function ($item) {
+                            return "--{$item}";
+                        },
+                        $arguments['required']
+                    );
+                }
+                if (count($arguments['optional'])) {
+                    $out = array_merge(
+                        $out,
+                        array_map(
+                            function ($item) {
+                                return "[--{$item}]";
+                            },
+                            $arguments['optional']
+                        )
+                    );
+                }
+                if (count($arguments['switches'])) {
+                    $out = array_merge(
+                        $out,
+                        array_map(
+                            function ($item) {
+                                return "[[--{$item}]]";
+                            },
+                            $arguments['switches']
+                        )
+                    );
+                }
+                if ($out) {
+                    echo '    ' . \join(' ', $out) . PHP_EOL;
+                }
+            }
+        } else {
+            echo 'No command defined yet.' . PHP_EOL;
         }
-        echo PHP_EOL;
 
-        echo 'Arguments:' . PHP_EOL;
-        foreach ($this->arguments as $name => $argument) {
-            $short = $argument->getShortcut();
+        $this->showHelpList($this->arguments, 'Arguments:');
+        $this->showHelpList($this->switches, 'Switches:');
+    }
+
+    /**
+     * Show list of all registered arguments/options.
+     * @param array $list
+     * @param string $title
+     * @return void
+     */
+    private function showHelpList(array $list, string $title): void
+    {
+        if (count($this->arguments) === 0) {
+            return;
+        }
+        echo PHP_EOL . $title . PHP_EOL;
+        foreach ($list as $name => $item) {
+            $short = $item->getShortcut();
             echo "--{$name}"
                 . ($short ? ", -{$short}": '')
                 . ': ' . PHP_EOL
-                . '    ' . ($argument->getDescription() ?? 'undescribed') . PHP_EOL;
-        }
-        echo PHP_EOL;
-
-        echo 'Switches:' . PHP_EOL;
-        foreach ($this->switches as $name => $switch) {
-            $short = $switch->getShortcut();
-            echo "--{$name}"
-                . ($short ? ", -{$short}": '')
-                . ': ' . PHP_EOL
-                . '    ' . ($switch->getDescription() ?? 'undescribed') . PHP_EOL;
+                . '    ' . ($item->getDescription() ?? 'undescribed') . PHP_EOL;
         }
     }
 }
