@@ -1,10 +1,8 @@
 <?php
 namespace Spaceboy\NetteCli;
 
-
 use Nette\Utils\AssertionException;
 use Nette\DI\Container;
-
 
 class Command
 {
@@ -147,7 +145,8 @@ class Command
             $container,
             $function->getParameters(),
             array_merge($this->argumentsRequired, $this->argumentsOptional, $this->switches),
-            $arguments
+            $arguments,
+            $switches
         );
         
         // Execute worker:
@@ -165,7 +164,12 @@ class Command
         }
     }
 
-    private function argumentCheck(string $argumentName)
+    /**
+     * Check for argument/switch name duplicity.
+     * @param string $argumentName
+     * @return void
+     */
+    private function argumentCheck(string $argumentName): void
     {
         if (in_array($argumentName, array_merge($this->argumentsRequired, $this->argumentsOptional, $this->switches))) {
             echo "Duplicate argument/switch name ({$argumentName}) in command {$this->name}." . PHP_EOL;
@@ -173,7 +177,22 @@ class Command
         }
     }
 
-    private function getFunctionParameters(Container $container, array $functionParameters, array $commandArguments, array $arguments): array
+    /**
+     * Validate arguments from command line and convert them to worker function/method format.
+     * @param Container $container Nette DI container
+     * @param array $functionParameters list of worker parameters
+     * @param array $commandArguments list of arguments from commandline
+     * @param array $arguments list of Cli registered parameters
+     * @param array $switches list of Cli registered switches
+     * @return array
+     */
+    private function getFunctionParameters(
+        Container $container,
+        array $functionParameters,
+        array $commandArguments,
+        array $arguments,
+        array $switches
+    ): array
     {
         $params = [];
         try {
