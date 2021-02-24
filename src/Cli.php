@@ -21,10 +21,10 @@ class Cli extends Bootstrap
     /** @var Argument[] list of arguments */
     private $arguments = [];
     
-    /** @var Argument[] list of switches */
-    private $switches = [];
+    /** @var Argument[] list of options */
+    private $options = [];
     
-    /** @var string[] list of argument/switch shortcuts (aliases) */
+    /** @var string[] list of argument/option shortcuts (aliases) */
     private $shortcuts = [];
     
     /** @var Command[] list of commands */
@@ -87,17 +87,17 @@ class Cli extends Bootstrap
      * @param Argument $argument
      * @return Cli
      */
-    public function registerSwitch(Argument $argument): self
+    public function registerOption(Argument $argument): self
     {
         $name = $argument->getName();
-        if (array_key_exists($name, $this->switches)) {
-            echo "Duplicate switch name ({$name})." . PHP_EOL;
+        if (array_key_exists($name, $this->options)) {
+            echo "Duplicate option name ({$name})." . PHP_EOL;
             exit;
         }
-        $this->switches[$name] = $argument->setValue(false);
+        $this->options[$name] = $argument->setValue(false);
         if ($shortcut = $argument->getShortcut()) {
             if (array_key_exists($shortcut, $this->shortcuts)) {
-                echo "Duplicate switch shortcut ({$shortcut})." . PHP_EOL;
+                echo "Duplicate option shortcut ({$shortcut})." . PHP_EOL;
                 exit;
             }
             $this->shortcuts[$shortcut] = $name;
@@ -117,8 +117,8 @@ class Cli extends Bootstrap
         }
         foreach ($command->getArguments() as $type => $arguments) {
             foreach ($arguments as $argName) {
-                if (!array_key_exists($argName, ($type === 'switches' ? $this->switches : $this->arguments))) {
-                    echo "Undefined argument/switch ({$argName}) for command {$name}." . PHP_EOL;
+                if (!array_key_exists($argName, ($type === 'options' ? $this->options : $this->arguments))) {
+                    echo "Undefined argument/option ({$argName}) for command {$name}." . PHP_EOL;
                     exit;
                 }
             }
@@ -152,7 +152,7 @@ class Cli extends Bootstrap
         $this->commands[$this->command]->execute(
             $this->getConfigurator()->createContainer(),
             $this->arguments,
-            $this->switches
+            $this->options
         );
     }
 
@@ -166,7 +166,7 @@ class Cli extends Bootstrap
         while ($argument = array_shift($arguments)) {
             $this_ = $this;
             if (preg_match('/^\-\-(.*)$/', $argument)) {
-                // Parameter --parameter [value]
+                // Argument --argument value
                 preg_replace_callback(
                     '/^\-\-(.*)$/',
                     function ($match) use (&$this_, &$arguments) {
@@ -174,17 +174,17 @@ class Cli extends Bootstrap
                             $this_->arguments[$match[1]]->setValue(array_shift($arguments));
                             return;
                         }
-                        if (array_key_exists($match[1], $this_->switches)) {
-                            $this_->switches[$match[1]]->setValue(true);
+                        if (array_key_exists($match[1], $this_->options)) {
+                            $this_->options[$match[1]]->setValue(true);
                             return;
                         }
-                        echo "Unknown argument/switch ({$match[1]})." . PHP_EOL;
+                        echo "Unknown argument/option ({$match[1]})." . PHP_EOL;
                         exit;
                     },
                     $argument
                 );
             } elseif (preg_match('/^\-(.)\=(.*)$/', $argument)) {
-                // Parameter -p=value
+                // Argument -a=value
                 preg_replace_callback(
                     '/^\-(.)\=(.*)$/',
                     function ($match) use (&$this_) {
@@ -197,15 +197,15 @@ class Cli extends Bootstrap
                     $argument
                 );
             } elseif (preg_match('/^\-(.)$/', $argument)) {
-                // Switch -s
+                // Option -o
                 preg_replace_callback(
                     '/^\-(.)$/',
                     function ($match) use (&$this_) {
                         if (!array_key_exists($match[1], $this->shortcuts)) {
-                            echo "Unknown switch shortcut ({$match[1]})." . PHP_EOL;
+                            echo "Unknown option shortcut ({$match[1]})." . PHP_EOL;
                             exit;
                         }
-                        $this_->switches[$this->shortcuts[$match[1]]]->setValue(true);
+                        $this_->options[$this->shortcuts[$match[1]]]->setValue(true);
                     },
                     $argument
                 );
@@ -252,14 +252,14 @@ class Cli extends Bootstrap
                         )
                     );
                 }
-                if (count($arguments['switches'])) {
+                if (count($arguments['options'])) {
                     $out = array_merge(
                         $out,
                         array_map(
                             function ($item) {
                                 return "[[--{$item}]]";
                             },
-                            $arguments['switches']
+                            $arguments['options']
                         )
                     );
                 }
@@ -272,7 +272,7 @@ class Cli extends Bootstrap
         }
 
         $this->showHelpList($this->arguments, 'Arguments:');
-        $this->showHelpList($this->switches, 'Switches:');
+        $this->showHelpList($this->options, 'Options:');
     }
 
     /**

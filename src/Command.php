@@ -1,8 +1,10 @@
 <?php
 namespace Spaceboy\NetteCli;
 
+
 use Nette\Utils\AssertionException;
 use Nette\DI\Container;
+
 
 class Command
 {
@@ -12,7 +14,7 @@ class Command
     
     private array $argumentsOptional = [];
     
-    private array $switches = [];
+    private array $options = [];
     
     private $worker;
 
@@ -91,14 +93,14 @@ class Command
     }
     
     /**
-     * Add command switch name.
-     * @param string $switchName
+     * Add command option name.
+     * @param string $optionName
      * @return Command
      */
-    public function withSwitch(string $switchName): self
+    public function withOption(string $optionName): self
     {
-        $this->argumentCheck($switchName);
-        $this->switches[] = $switchName;
+        $this->argumentCheck($optionName);
+        $this->options[] = $optionName;
         return $this;
     }
     
@@ -111,7 +113,7 @@ class Command
         return [
             'required' => $this->argumentsRequired,
             'optional' => $this->argumentsOptional,
-            'switches' => $this->switches,
+            'options' => $this->options,
         ];
     }
     
@@ -130,10 +132,10 @@ class Command
      * Execute command worker function.
      * @param $container
      * @param array $arguments defined for CLI app
-     * @param array $switches defined for CLI app
+     * @param array $options defined for CLI app
      * @return void
      */
-    public function execute(Container $container, array $arguments, array $switches): void
+    public function execute(Container $container, array $arguments, array $options): void
     {
         $function = (
             is_array($this->worker)
@@ -144,9 +146,9 @@ class Command
         $params = $this->getFunctionParameters(
             $container,
             $function->getParameters(),
-            array_merge($this->argumentsRequired, $this->argumentsOptional, $this->switches),
+            array_merge($this->argumentsRequired, $this->argumentsOptional, $this->options),
             $arguments,
-            $switches
+            $options
         );
         
         // Execute worker:
@@ -165,14 +167,14 @@ class Command
     }
 
     /**
-     * Check for argument/switch name duplicity.
+     * Check for argument/option name duplicity.
      * @param string $argumentName
      * @return void
      */
     private function argumentCheck(string $argumentName): void
     {
-        if (in_array($argumentName, array_merge($this->argumentsRequired, $this->argumentsOptional, $this->switches))) {
-            echo "Duplicate argument/switch name ({$argumentName}) in command {$this->name}." . PHP_EOL;
+        if (in_array($argumentName, array_merge($this->argumentsRequired, $this->argumentsOptional, $this->options))) {
+            echo "Duplicate argument/option name ({$argumentName}) in command {$this->name}." . PHP_EOL;
             exit;
         }
     }
@@ -183,7 +185,7 @@ class Command
      * @param array $functionParameters list of worker parameters
      * @param array $commandArguments list of arguments from commandline
      * @param array $arguments list of Cli registered parameters
-     * @param array $switches list of Cli registered switches
+     * @param array $options list of Cli registered options
      * @return array
      */
     private function getFunctionParameters(
@@ -191,7 +193,7 @@ class Command
         array $functionParameters,
         array $commandArguments,
         array $arguments,
-        array $switches
+        array $options
     ): array
     {
         $params = [];
@@ -202,8 +204,8 @@ class Command
                 if ($knownArgument && array_key_exists($name, $arguments)) {
                     $arguments[$name]->validate(in_array($name, $this->argumentsRequired));
                     $params[$name] = $arguments[$name]->getValue();
-                } elseif ($knownArgument && array_key_exists($name, $switches)) {
-                    $params[$name] = $switches[$name]->getValue();
+                } elseif ($knownArgument && array_key_exists($name, $options)) {
+                    $params[$name] = $options[$name]->getValue();
                 } elseif ($class = $parameter->getClass()) {
                     $params[$name] = $container->getByType($class->getName());
                 } else {

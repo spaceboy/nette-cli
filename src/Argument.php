@@ -1,8 +1,10 @@
 <?php
 namespace Spaceboy\NetteCli;
 
+
 use Nette\Utils\AssertionException;
 use Nette\Utils\Validators;
+
 
 class Argument
 {
