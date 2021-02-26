@@ -283,7 +283,7 @@ class Cli extends Bootstrap
      */
     private function showHelpList(array $list, string $title): void
     {
-        if (count($this->arguments) === 0) {
+        if (count($list) === 0) {
             return;
         }
         echo PHP_EOL . $title . PHP_EOL;
