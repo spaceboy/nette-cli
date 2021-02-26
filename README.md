@@ -103,7 +103,7 @@ php command.php hello --name World --strong
 
 * ### `run(string $arguments = null)`
   Runs whole application.  
-  When you for some reason (eg. during testing) need manipulate arguments from command line, use `$arguments` argument.  
+  When you for some reason (e.g. during testing) need manipulate arguments from command line, use `$arguments` argument.  
   Example:
   ```
   ...
@@ -189,7 +189,7 @@ php command.php hello --name World --strong
 
 ## Using helpers
 
-When things gonna be complicated, you should need to share some argument(s) or worker functions(s) between two or more scripts (eg. between `cli` script and `cron` script).  
+When things gonna be complicated, you should need to share some argument(s) or worker functions(s) between two or more scripts (e.g. between `cli` script and `cron` script).  
 Feel free to use helpers. You can set both static and dynamic methods as command worker function as well as closure. Just don't forget that those methods must be public.
 
 ```
