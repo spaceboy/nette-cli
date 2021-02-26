@@ -1,7 +1,9 @@
 {
     "name": "spaceboy/nette-cli",
-    "description": "nette-cli tool",
+    "description": "Simple tool for easy creating CLI scripts in Nette PHP framework",
+    "keywords": ["nette", "php", "cli"],
     "type": "library",
+    "license": ["MIT", "BSD-3-Clause", "GPL-2.0", "GPL-3.0"],
     "autoload": {
         "classmap": ["src"]
     },
