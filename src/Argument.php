@@ -10,19 +10,19 @@ class Argument
 {
     /** @var string argument full name (used as --argument) */
     private string $name;
-    
+
     /** @var string argument shortcut (used as -s) */
     private ?string $shortcut = null;
-    
+
     /** @var string argument validation format in Nette\Util\Validators format */
     private ?string $format = null;
-    
+
     /** @var mixed argument value */
     private $value = null;
 
     /** @var bool unset */
     private bool $unset = true;
-    
+
     /** @var string argument description */
     private ?string $description = null;
 
@@ -43,16 +43,16 @@ class Argument
     {
         $this->name = $name;
     }
-    
+
     /**
      * Name getter.
      * @return string
-     */ 
+     */
     public function getName(): string
     {
         return $this->name;
     }
-    
+
     /**
      * Description setter.
      * @param string $description
@@ -103,7 +103,7 @@ class Argument
         $this->format = $format;
         return $this;
     }
-    
+
     /**
      * Validation method.
      * @param bool $isRequired
@@ -118,9 +118,13 @@ class Argument
         if ($this->format === null) {
             return;
         }
-        Validators::assert($this->getValue(), $this->format, $this->getName());
+        Validators::assert(
+            $this->getValue(),
+            ($isRequired ? $this->format : '?' . $this->format),
+            $this->getName()
+        );
     }
-    
+
     /**
      * Value setter.
      * @param mixed $value
@@ -132,7 +136,7 @@ class Argument
         $this->unset = false;
         return $this;
     }
-    
+
     /**
      * Value getter.
      * @return mixed

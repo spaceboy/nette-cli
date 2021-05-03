@@ -9,17 +9,17 @@ use Nette\DI\Container;
 class Command
 {
     private string $name;
-    
+
     private array $argumentsRequired = [];
-    
+
     private array $argumentsOptional = [];
-    
+
     private array $options = [];
-    
+
     private $worker;
 
     private ?string $description = null;
-    
+
     /**
      * Create class instance.
      * @param string $name command name
@@ -29,7 +29,7 @@ class Command
     {
         return new static($name);
     }
-    
+
     /**
      * Class constructor
      * @param string $name command name
@@ -38,7 +38,7 @@ class Command
     {
         $this->name = $name;
     }
-    
+
     /**
      * Command name getter.
      * @return string
@@ -79,7 +79,7 @@ class Command
         $this->argumentsRequired[] = $argumentName;
         return $this;
     }
-    
+
     /**
      * Add optional command argument name.
      * @param string $paramName
@@ -91,7 +91,7 @@ class Command
         $this->argumentsOptional[] = $argumentName;
         return $this;
     }
-    
+
     /**
      * Add command option name.
      * @param string $optionName
@@ -103,7 +103,7 @@ class Command
         $this->options[] = $optionName;
         return $this;
     }
-    
+
     /**
      * Command arguments getter.
      * @return array
@@ -116,7 +116,7 @@ class Command
             'options' => $this->options,
         ];
     }
-    
+
     /**
      * Worker setter.
      * @param callable $worker
@@ -150,7 +150,7 @@ class Command
             $arguments,
             $options
         );
-        
+
         // Execute worker:
         try {
             if (is_array($this->worker)) {
@@ -161,8 +161,7 @@ class Command
                 $function->invokeArgs($params);
             }
         } catch (\Exception $ex) {
-            echo "Error: {$ex->getMessage()}" . PHP_EOL;
-            exit;
+            Cli::error($ex->getMessage());
         }
     }
 
@@ -174,8 +173,7 @@ class Command
     private function argumentCheck(string $argumentName): void
     {
         if (in_array($argumentName, array_merge($this->argumentsRequired, $this->argumentsOptional, $this->options))) {
-            echo "Duplicate argument/option name ({$argumentName}) in command {$this->name}." . PHP_EOL;
-            exit;
+            Cli::error("Duplicate argument/option name ({$argumentName}) in command {$this->name}.");
         }
     }
 
@@ -209,14 +207,12 @@ class Command
                 } elseif ($class = $parameter->getClass()) {
                     $params[$name] = $container->getByType($class->getName());
                 } else {
-                    // Something went wrong:
-                    echo "Unexpected trouble.\n";
-                    exit;
+                    // Can't resolve function parameter:
+                    Cli::error("Can not resolve worker function parameter ({$name}).");
                 }
             }
         } catch (AssertionException $ex) {
-            echo 'Invalid argument: ' . $ex->getMessage() . PHP_EOL;
-            exit;
+            Cli::error('Invalid argument format' . PHP_EOL . $ex->getMessage());
         }
         return $params;
     }

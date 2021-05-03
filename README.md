@@ -86,19 +86,19 @@ php command.php hello --name World --strong
 
 ## `Cli` public methods:
 
-* ### `setName(string $name)`
+* ### `setName(string $name): Cli`
   Sets application name displayed during each command execution.
 
-* ### `setDescription(string $description)`
+* ### `setDescription(string $description): Cli`
   Sets application description displayed when application is run without any command/argument (help), lists of commands, arguments and options follow.
 
-* ### `registerArgument(Argument $argument)`
+* ### `registerArgument(Argument $argument): Cli`
   Registers argument (see Argument). Only registered arguments can be referrenced by commands.
 
-* ### `registerOption(Argument $option)`
+* ### `registerOption(Argument $option): Cli`
   Registers option (see Argument, as option has type Argument). Only registered arguments can be referrenced by commands.
 
-* ### `registerCommand(Command $command)`
+* ### `registerCommand(Command $command): Cli`
   Registers executable command (see Command).
 
 * ### `run(string $arguments = null)`
@@ -109,50 +109,52 @@ php command.php hello --name World --strong
   ...
     ->run('--arg1 "Argument one" --arg2 Argument2 --option')
   ```
+* ### `error(string $message): void`
+  **Static** method; displays error message (`$message`) end exits script.
 
 ## `Argument` public methods:
 
-* ### `create(string $name)`
-  Creates Argument, returns Argument.  
+* ### `create(string $name): Argument`
+  **Static** method, creates an instance of `Argument`.  
   All other methods can be chained.
   ```
     Argument::create('my-argument')
   ```
 
-* ### `setDescription(string $description)`
+* ### `setDescription(string $description): Argument`
   Sets argument description (displayed when user looks for help, so try to be acurate).
 
-* ### `setShortcut(string $shortcut)`
+* ### `setShortcut(string $shortcut): Argument`
   Sets one char shortcut for argument name. Try to find and predicable and intuitive char, or just don't use shortcut.
 
-* ### `setFormat(string $format)`
+* ### `setFormat(string $format): Argument`
   Sets required [Nette validation type](https://doc.nette.org/en/3.1/validators#toc-expected-types) for argument. Can save you lot of validations in the command worker function body.
 
 ## `Command` public methods:
 
 * ### `create(string $name)`
-  Creates Command, returns Command.  
+  **Static** method, creates an instance of `Command`.  
   All other methods can be chained.
   ```
     Command::create('my-command')
   ```
 
-* ### `setDescription(string $description)`
+* ### `setDescription(string $description): Command`
   Sets argument description (displayed when user looks for help, so try to be acurate).
 
-* ### `withArgumentRequired(string $argumentName)`
+* ### `withArgumentRequired(string $argumentName): Command`
   Sets _required_ argument for command worker function.  
   Only registered argument names can be used.
 
-* ### `withArgumentOptional(string $argumentName)`
+* ### `withArgumentOptional(string $argumentName): Command`
   Sets _optional_ argument for command worker function.  
   Only registered argument names can be used.
 
-* ### `withOption(string $optionName)`
+* ### `withOption(string $optionName): Command`
   Sets _optional_ boolean argument (option) for command worker function.  
   Only registered option names can be used.
 
-* ### `setWorker(callable $worker)`
+* ### `setWorker(callable $worker): Command`
   Sets executive function for command.  
   Function arguments must be:
 
@@ -186,6 +188,83 @@ php command.php hello --name World --strong
         )
     )
 ```
+
+## Class `Format`
+Class `Format` is an simple helper for easier command line text formatting.
+
+### Methods:
+
+* ### `reset(): string`
+  Return string which resets text/background color settings to standard. 
+
+* ### `color(string ...$color): string`
+  Return string which (after echoing on console) sets text/background color for next output.  
+  At the end, don't forget to reset settings to default (using `reset` method)!
+```
+  echo 
+      Format::color(Format::RED, Format::BG_WHITE) 
+      . 'Red text on white background'
+      . Format::color(Format::GREEN)
+      . 'GREEN text on white background'
+      . Format::reset()
+      ;
+```
+
+* ### `bold(string $text): string`
+  Return string which is (after echoing on console) displayed bold.
+
+* ### `dim(string $text): string`
+  Return string which is (after echoing on console) displayed dim.
+
+* ### `underlined(string $text): string`
+  Return string which is (after echoing on console) displayed underlined.
+
+* ### `blink(string $text): string`
+  Return string which is (after echoing on console) displayed blinking.
+
+* ### `reverse(string $text): string`
+  Return string which is (after echoing on console) displayed in reverse (text and background colors are switched).
+
+* ### `hidden(string $text): string`
+  Return string which is (after echoing on console) displayed hidden (useful for passwords etc.).
+
+* ### `bell(): string`
+  Return string which (after echoing on console) makes beep sound (like good old telex bell).
+
+* ### `backspace(): string`
+  Return string which (after echoing on console) moves cursor one position left.
+
+* ### `tab(): string`
+  Return string which (after echoing on console) moves cursor to the next tab stop (or the end of line, when there ane no more tab stops).
+
+* ### `getConsoleColumns: int`
+  Return console width (in characters).
+
+* ### `getConsoleLines: int`
+  Return console heights (in lines).
+
+### Color table:
+
+| text color code | background color code | color |
+|-----------------|-----------------------|-------|
+| DEFAULT_COLOR | BG_DEFAULT | default console color |
+| BLACK | BG_BLACK | black |
+| RED | BG_RED | red |
+| GREEN | BG_GREEN | green |
+| YELLOW | BG_YELLOW | yellow |
+| BLUE | BG_BLUE | blue |
+| MAGENTA | BG_MAGENTA | magenta |
+| CYAN | BG_CYAN | cyan |
+| LIGHT_GRAY | BG_LIGHT_GRAY | light gray |
+| DARK_GRAY | BG_DARK_GRAY | dark gray |
+| LIGHT_RED | BG_LIGHT_RED | light red |
+| LIGHT_GREEN | BG_LIGHT_GREEN | light green |
+| LIGHT_YELLOW | BG_LIGHT_YELLOW | light yellow |
+| LIGHT_BLUE | BG_LIGHT_BLUE | light blue |
+| LIGHT_MAGENTA | BG_LIGHT_MAGENTA | light magenta |
+| LIGHT_CYAN | BG_LIGHT_CYAN | light cyan |
+| WHITE | BG_WHITE | white |
+
 
 ## Using helpers
 

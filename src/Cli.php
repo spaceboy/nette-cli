@@ -5,6 +5,7 @@ namespace Spaceboy\NetteCli;
 use App\Bootstrap;
 use Spaceboy\NetteCli\Argument;
 use Spaceboy\NetteCli\Command;
+use Spaceboy\NetteCli\Format;
 
 
 class Cli extends Bootstrap
@@ -14,31 +15,31 @@ class Cli extends Bootstrap
 
     /** @var string description */
     private ?string $description;
-    
+
     /** @var string application name */
     private string $name = 'NetteCli application 0.01';
-    
+
     /** @var Argument[] list of arguments */
     private $arguments = [];
-    
+
     /** @var Argument[] list of options */
     private $options = [];
-    
+
     /** @var string[] list of argument/option shortcuts (aliases) */
     private $shortcuts = [];
-    
+
     /** @var Command[] list of commands */
     private $commands = [];
-    
+
 
     /**
-     * 
+     *
      */
     public function getConfigurator()
     {
         return self::boot(in_array('--debug', $_SERVER['argv'], true));
     }
-    
+
     /**
      * Name setter.
      * @param string $name CLI app name
@@ -60,7 +61,7 @@ class Cli extends Bootstrap
         $this->description = $description;
         return $this;
     }
-    
+
     /**
      * @param Argument $argument
      * @return Cli
@@ -69,20 +70,18 @@ class Cli extends Bootstrap
     {
         $name = $argument->getName();
         if (array_key_exists($name, $this->arguments)) {
-            echo "Duplicite parameter name ({$name})." . PHP_EOL;
-            exit;
+            static::error("Duplicite parameter name ({$name}).");
         }
         $this->arguments[$name] = $argument;
         if ($shortcut = $argument->getShortcut()) {
             if (array_key_exists($shortcut, $this->shortcuts)) {
-                echo "Duplicite argument shortcut ({$shortcut})." . PHP_EOL;
-                exit;
+                static::error("Duplicite argument shortcut ({$shortcut}).");
             }
             $this->shortcuts[$shortcut] = $name;
         }
         return $this;
     }
-    
+
     /**
      * @param Argument $argument
      * @return Cli
@@ -91,20 +90,18 @@ class Cli extends Bootstrap
     {
         $name = $argument->getName();
         if (array_key_exists($name, $this->options)) {
-            echo "Duplicate option name ({$name})." . PHP_EOL;
-            exit;
+            static::error("Duplicate option name ({$name}).");
         }
         $this->options[$name] = $argument->setValue(false);
         if ($shortcut = $argument->getShortcut()) {
             if (array_key_exists($shortcut, $this->shortcuts)) {
-                echo "Duplicate option shortcut ({$shortcut})." . PHP_EOL;
-                exit;
+                static::error("Duplicate option shortcut ({$shortcut}).");
             }
             $this->shortcuts[$shortcut] = $name;
         }
         return $this;
     }
-    
+
     /**
      * @param Command $command
      * @return Cli
@@ -112,21 +109,19 @@ class Cli extends Bootstrap
     public function registerCommand(Command $command): self
     {
         if (array_key_exists($name = $command->getName(), $this->commands)) {
-            echo "Duplicate command name ({$name})." . PHP_EOL;
-            exit;
+            static::error("Duplicate command name ({$name}).");
         }
         foreach ($command->getArguments() as $type => $arguments) {
             foreach ($arguments as $argName) {
                 if (!array_key_exists($argName, ($type === 'options' ? $this->options : $this->arguments))) {
-                    echo "Undefined argument/option ({$argName}) for command {$name}." . PHP_EOL;
-                    exit;
+                    static::error("Argument/option ({$argName}) linked to command {$name} was not registered.");
                 }
             }
         }
         $this->commands[$name] = $command;
         return $this;
     }
-    
+
     /**
      * Execute command.
      * @param string $arguments
@@ -138,22 +133,33 @@ class Cli extends Bootstrap
             ? array_slice($_SERVER['argv'], 1)
             : array_filter(str_getcsv($arguments, ' ', '"', '\\'))
         );
-        
+
         if ($this->command === null) {
             $this->showHelp();
             exit;
         }
-        
+
         echo $this->name . PHP_EOL;
         if (!array_key_exists($this->command, $this->commands)) {
-            echo "Unknown command ({$this->command})." . PHP_EOL;
-            exit;
+            static::error("Unknown command ({$this->command}).");
         }
         $this->commands[$this->command]->execute(
-            $this->getConfigurator()->createContainer(),
+            $this->container,
             $this->arguments,
             $this->options
         );
+    }
+
+    public static function error(string $message): void
+    {
+        echo
+            Format::bell()
+            . Format::color(Format::WHITE, Format::BG_RED)
+            . Format::bold('Error: ')
+            . $message
+            . Format::reset()
+            . PHP_EOL;
+        exit;
     }
 
     /**
@@ -178,8 +184,8 @@ class Cli extends Bootstrap
                             $this_->options[$match[1]]->setValue(true);
                             return;
                         }
-                        echo "Unknown argument/option ({$match[1]})." . PHP_EOL;
-                        exit;
+                        //Cli::error("Unknown argument");
+                        static::error("Unknown argument/option ({$match[1]}).");
                     },
                     $argument
                 );
@@ -189,8 +195,7 @@ class Cli extends Bootstrap
                     '/^\-(.)\=(.*)$/',
                     function ($match) use (&$this_) {
                         if (!array_key_exists($match[1], $this->shortcuts)) {
-                            echo "Unknown argument shortcut ({$match[1]})." . PHP_EOL;
-                            exit;
+                            static::error("Unknown argument shortcut ({$match[1]}).");
                         }
                         $this_->arguments[$this->shortcuts[$match[1]]]->setValue($match[2]);
                     },
@@ -202,8 +207,7 @@ class Cli extends Bootstrap
                     '/^\-(.)$/',
                     function ($match) use (&$this_) {
                         if (!array_key_exists($match[1], $this->shortcuts)) {
-                            echo "Unknown option shortcut ({$match[1]})." . PHP_EOL;
-                            exit;
+                            static::error("Unknown option shortcut ({$match[1]}).");
                         }
                         $this_->options[$this->shortcuts[$match[1]]]->setValue(true);
                     },
@@ -222,12 +226,21 @@ class Cli extends Bootstrap
      */
     private function showHelp(): void
     {
-        echo ($this->description ?? $this->name) . PHP_EOL;
-        echo 'Usage:' . PHP_EOL;
-        echo '    php ' . $_SERVER['SCRIPT_NAME'] . ' command [arguments] [options]' . PHP_EOL . PHP_EOL;
+        echo
+            (
+                $this->description
+                ??
+                Format::color(Format::YELLOW)
+                    . Format::bold($this->name)
+                    . Format::color(Format::DEFAULT_COLOR, Format::BG_DEFAULT)
+            ) . PHP_EOL
+            . 'Usage:' . PHP_EOL
+            . Format::color(Format::GREEN)
+            . '    php ' . $_SERVER['SCRIPT_NAME'] . ' command [arguments] [options]'
+            . Format::reset() . PHP_EOL . PHP_EOL;
 
         if (count($this->commands) > 0) {
-            echo 'Commands:' . PHP_EOL;
+            echo Format::bold('Commands:') . PHP_EOL;
             foreach ($this->commands as $name => $command) {
                 echo "{$name}: " . PHP_EOL
                     . '    ' . ($command->getDescription() ?? 'undescribed') . PHP_EOL;
@@ -286,7 +299,7 @@ class Cli extends Bootstrap
         if (count($list) === 0) {
             return;
         }
-        echo PHP_EOL . $title . PHP_EOL;
+        echo PHP_EOL . Format::bold($title) . PHP_EOL;
         foreach ($list as $name => $item) {
             $short = $item->getShortcut();
             echo "--{$name}"
