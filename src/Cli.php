@@ -3,6 +3,7 @@ namespace Spaceboy\NetteCli;
 
 
 use App\Bootstrap;
+use Nette\DI\Container;
 use Spaceboy\NetteCli\Argument;
 use Spaceboy\NetteCli\Command;
 use Spaceboy\NetteCli\Format;
@@ -10,6 +11,8 @@ use Spaceboy\NetteCli\Format;
 
 class Cli extends Bootstrap
 {
+    private Container $container;
+
     /** @var string command */
     private ?string $command = null;
 
@@ -32,6 +35,10 @@ class Cli extends Bootstrap
     private $commands = [];
 
 
+    public function __construct()
+    {
+        $this->container = $this->getConfigurator()->createContainer();
+    }
     /**
      *
      */
@@ -236,7 +243,7 @@ class Cli extends Bootstrap
             ) . PHP_EOL
             . 'Usage:' . PHP_EOL
             . Format::color(Format::GREEN)
-            . '    php ' . $_SERVER['SCRIPT_NAME'] . ' command [arguments] [options]'
+            . '    [php] ' . $_SERVER['SCRIPT_NAME'] . ' command [arguments] [options]'
             . Format::reset() . PHP_EOL . PHP_EOL;
 
         if (count($this->commands) > 0) {
