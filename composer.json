@@ -7,8 +7,10 @@
     "autoload": {
         "classmap": ["src"]
     },
-    "post-update-cmd": "Spaceboy\\NetteCli\\Helper::postInstall",
-    "post-install-cmd": "Spaceboy\\NetteCli\\Helper::postInstall",
+    "scripts": {
+        "post-update-cmd": "Spaceboy\\NetteCli\\Helper::postInstall",
+        "post-install-cmd": "Spaceboy\\NetteCli\\Helper::postInstall"
+    },
     "require": {
         "php": ">=7.1",
         "nette/bootstrap": "^3.0",
