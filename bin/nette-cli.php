@@ -9,12 +9,12 @@ use Spaceboy\NetteCli\Command;
 use Spaceboy\NetteCli\Helper;
 
 (new Cli())
-    ->setName('CLI application name')
-    ->setDescription('CLI application description')
+    ->setName('NetteCli base script')
+    ->setDescription('Create your own CLI scripts in Nette easily!')
     ->registerArgument(
         Argument::create('name')
             ->setShortcut('n')
-            ->setDescription('Script name (e.g. my-script for my-script.php)')
+            ->setDescription('Script name (e.g. my-script.php)')
     )
     ->registerOption(
         Argument::create('executable')
@@ -59,7 +59,7 @@ use Spaceboy\NetteCli\Helper;
 
                     $script = (
                         $executable
-                        ? '#!' . PHP_BINARY
+                        ? '#!' . PHP_BINARY . PHP_EOL
                         : ''
                     );
 
@@ -68,8 +68,7 @@ use Spaceboy\NetteCli\Helper;
                     \file_put_contents(
                         $name,
 <<<EOF
-{$script}
-<?php
+{$script}<?php
 /**
  * CLI script
  * @author {$user}
