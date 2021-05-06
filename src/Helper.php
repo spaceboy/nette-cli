@@ -1,6 +1,9 @@
 <?php
 namespace Spaceboy\NetteCli;
 
+use Composer\Script\Event;
+use Composer\Installer\PackageEvent;
+
 class Helper
 {
     /**
@@ -58,5 +61,15 @@ class Helper
                 )
             )
             . \substr($to, $len);
+    }
+
+    public static function postInstall(Event $event)
+    {
+        echo
+            'Please copy (or link) file ' . PHP_EOL
+            . $event->getComposer()->getConfig()->get('vendor-dir')
+            . '/spaceboy/nette-cli/nette-cli.php' . PHP_EOL
+            . 'into your bin directory.' . PHP_EOL
+        ;
     }
 }
