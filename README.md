@@ -2,7 +2,7 @@
 Simple tool for easy CLI apps creation in Nette framework
 
 ## Installation
-The best way to install into [Nette web application](https://github.com/nette/nette) is the easiest one.  
+The best way to install into [Nette web application](https://github.com/nette/nette) is the easiest one.
 Open console, go to your app directory and execute following command:
 ```
 composer require spaceboy/nette-cli
@@ -11,6 +11,8 @@ composer require spaceboy/nette-cli
 ## My first CLI application
 
 I strongly recommend you to create a dedicated space for CLI applications in app root directory. For example `bin` for apps operated from command line and `cron` for apps runned from cron.
+
+After installation copy (or link) file `nette-cli.php` from `vendor/spaceboy/nette-cli/bin` directory to folder dedicated for CLI scripts (e.g. `bin`).
 
 Create a `PHP` file, f.e. `command.php` in `bin` directory:
 ```
@@ -22,8 +24,13 @@ root
  +- log   // Nette log directory
  ...
  ```
+Or create template script by simple running `nette-cli.php` in `bin` directory:
+```
+php nette-cli.php create --name command.php
+```
 
-In `command.php`, we at first must create app namespace and include required files and namespaces:
+In `command.php`, we at first must create app namespace and include required files and namespaces.
+
 ```
 <?php
 namespace App\Bin;
@@ -102,8 +109,8 @@ php command.php hello --name World --strong
   Registers executable command (see Command).
 
 * ### `run(string $arguments = null)`
-  Runs whole application.  
-  When you for some reason (e.g. during testing) need manipulate arguments from command line, use `$arguments` argument.  
+  Runs whole application.
+  When you for some reason (e.g. during testing) need manipulate arguments from command line, use `$arguments` argument.
   Example:
   ```
   ...
@@ -115,7 +122,7 @@ php command.php hello --name World --strong
 ## `Argument` public methods:
 
 * ### `create(string $name): Argument`
-  **Static** method, creates an instance of `Argument`.  
+  **Static** method, creates an instance of `Argument`.
   All other methods can be chained.
   ```
     Argument::create('my-argument')
@@ -133,7 +140,7 @@ php command.php hello --name World --strong
 ## `Command` public methods:
 
 * ### `create(string $name)`
-  **Static** method, creates an instance of `Command`.  
+  **Static** method, creates an instance of `Command`.
   All other methods can be chained.
   ```
     Command::create('my-command')
@@ -143,28 +150,28 @@ php command.php hello --name World --strong
   Sets argument description (displayed when user looks for help, so try to be acurate).
 
 * ### `withArgumentRequired(string $argumentName): Command`
-  Sets _required_ argument for command worker function.  
+  Sets _required_ argument for command worker function.
   Only registered argument names can be used.
 
 * ### `withArgumentOptional(string $argumentName): Command`
-  Sets _optional_ argument for command worker function.  
+  Sets _optional_ argument for command worker function.
   Only registered argument names can be used.
 
 * ### `withOption(string $optionName): Command`
-  Sets _optional_ boolean argument (option) for command worker function.  
+  Sets _optional_ boolean argument (option) for command worker function.
   Only registered option names can be used.
 
 * ### `setWorker(callable $worker): Command`
-  Sets executive function for command.  
+  Sets executive function for command.
   Function arguments must be:
 
-  1. Registered in Cli (using `Cli->registerArgument()` or `Cli->registerOption()`)  
-  AND declared in Command definition (using `Command->withArgumentRequired()`, `Command->withArgumentOptional()` or `Command->withOption()`)  
+  1. Registered in Cli (using `Cli->registerArgument()` or `Cli->registerOption()`)
+  AND declared in Command definition (using `Command->withArgumentRequired()`, `Command->withArgumentOptional()` or `Command->withOption()`)
   (Arguments passed from command line)
 
   **OR**
 
-  2. Declared by typehint  
+  2. Declared by typehint
   (Nette application classes/objects)
 
   Example:
@@ -195,14 +202,14 @@ Class `Format` is an simple helper for easier command line text formatting.
 ### Methods:
 
 * ### `reset(): string`
-  Return string which resets text/background color settings to standard. 
+  Return string which resets text/background color settings to standard.
 
 * ### `color(string ...$color): string`
-  Return string which (after echoing on console) sets text/background color for next output.  
+  Return string which (after echoing on console) sets text/background color for next output.
   At the end, don't forget to reset settings to default (using `reset` method)!
 ```
-  echo 
-      Format::color(Format::RED, Format::BG_WHITE) 
+  echo
+      Format::color(Format::RED, Format::BG_WHITE)
       . 'Red text on white background'
       . Format::color(Format::GREEN)
       . 'GREEN text on white background'
@@ -268,7 +275,7 @@ Class `Format` is an simple helper for easier command line text formatting.
 
 ## Using helpers
 
-When things gonna be complicated, you should need to share some argument(s) or worker functions(s) between two or more scripts (e.g. between `cli` script and `cron` script).  
+When things gonna be complicated, you should need to share some argument(s) or worker functions(s) between two or more scripts (e.g. between `cli` script and `cron` script).
 Feel free to use helpers. You can set both static and dynamic methods as command worker function as well as closure. Just don't forget that those methods must be public.
 
 ```
