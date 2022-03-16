@@ -34,6 +34,9 @@ class Cli extends Bootstrap
     /** @var Command[] list of commands */
     private $commands = [];
 
+    /** @var bool showing application name on start or not */
+    private bool $showingName = true;
+
 
     public function __construct()
     {
@@ -48,6 +51,15 @@ class Cli extends Bootstrap
     }
 
     /**
+     * Name getter.
+     * @return string
+     */
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    /**
      * Name setter.
      * @param string $name CLI app name
      * @return Cli
@@ -55,6 +67,26 @@ class Cli extends Bootstrap
     public function setName(string $name): self
     {
         $this->name = $name;
+        return $this;
+    }
+
+    /**
+     * Print application name.
+     * @return Cli
+     */
+    public function showName(): self
+    {
+        echo $this->getName() . PHP_EOL;
+        return $this;
+    }
+
+    /**
+     * Do not print application name on start.
+     * @return Cli;
+     */
+    public function hideName(): self
+    {
+        $this->showingName = false;
         return $this;
     }
 
@@ -146,11 +178,14 @@ class Cli extends Bootstrap
             exit;
         }
 
-        echo $this->name . PHP_EOL;
+        if ($this->showingName) {
+            $this->showName();
+        }
         if (!array_key_exists($this->command, $this->commands)) {
             static::error("Unknown command ({$this->command}).");
         }
         $this->commands[$this->command]->execute(
+            $this,
             $this->container,
             $this->arguments,
             $this->options

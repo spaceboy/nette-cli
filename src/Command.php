@@ -130,12 +130,13 @@ class Command
 
     /**
      * Execute command worker function.
-     * @param $container
+     * @param Cli $cli
+     * @param Container $container
      * @param array $arguments defined for CLI app
      * @param array $options defined for CLI app
      * @return void
      */
-    public function execute(Container $container, array $arguments, array $options): void
+    public function execute(Cli $cli, Container $container, array $arguments, array $options): void
     {
         $function = (
             is_array($this->worker)
@@ -144,6 +145,7 @@ class Command
         );
 
         $params = $this->getFunctionParameters(
+            $cli,
             $container,
             $function->getParameters(),
             array_merge($this->argumentsRequired, $this->argumentsOptional, $this->options),
@@ -179,6 +181,7 @@ class Command
 
     /**
      * Validate arguments from command line and convert them to worker function/method format.
+     * @param Cli $cli
      * @param Container $container Nette DI container
      * @param array $functionParameters list of worker parameters
      * @param array $commandArguments list of arguments from commandline
@@ -187,6 +190,7 @@ class Command
      * @return array
      */
     private function getFunctionParameters(
+        Cli $cli,
         Container $container,
         array $functionParameters,
         array $commandArguments,
@@ -195,6 +199,7 @@ class Command
     ): array
     {
         $params = [];
+        $cliClass = get_class($cli);
         try {
             foreach ($functionParameters as $parameter) {
                 $name = $parameter->getName();
@@ -205,7 +210,11 @@ class Command
                 } elseif ($knownArgument && array_key_exists($name, $options)) {
                     $params[$name] = $options[$name]->getValue();
                 } elseif ($class = $parameter->getClass()) {
-                    $params[$name] = $container->getByType($class->getName());
+                    $params[$name] = (
+                        $class->getName() === $cliClass
+                        ? $cli
+                        : $container->getByType($class->getName())
+                    );
                 } else {
                     // Can't resolve function parameter:
                     Cli::error("Can not resolve worker function parameter ({$name}).");
